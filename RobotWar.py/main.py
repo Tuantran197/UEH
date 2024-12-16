@@ -27,6 +27,8 @@ fontR = pygame.font.Font('fonts/pressstart2p.ttf', 60)
 win = pygame.font.Font('fonts/pressstart2p.ttf', 60)
 fontS = pygame.font.Font('fonts/pressstart2p.ttf', 25)
 fontX = pygame.font.Font('fonts/pressstart2p.ttf', 45)
+fontW = pygame.font.Font('fonts/pressstart2p.ttf', 30)
+fontC = pygame.font.Font('fonts/pressstart2p.ttf', 25)
 
 
 
@@ -79,6 +81,7 @@ game_paused = True
 menu_state = "main"
 score = 0 
 sound_played = False
+theme_sound = False
 
 #define colours
 red = (255, 0, 0)
@@ -174,7 +177,7 @@ class Bullets(pygame.sprite.Sprite):
 			score += 10
 			explosion_fx.play()
 			explosion = Explosion(self.rect.centerx, self.rect.centery, 2) 
-			explosion_group.add(explosion) 
+			explosion_group.add(explosion)
 
 
 
@@ -217,9 +220,6 @@ class Box_Bullets(pygame.sprite.Sprite):
 			spaceship.health_remaining -= 1 # máu sẽ mất đi 1 
 			explosion = Explosion(self.rect.centerx, self.rect.centery, 1) #nổ theo size 1
 			explosion_group.add(explosion)
-
-
-
 
 #create Explosion class
 class Explosion(pygame.sprite.Sprite):
@@ -277,7 +277,6 @@ def create_robots():
 
 create_robots()
 
-
 #create player
 spaceship = Spaceship(int(screen_width / 2), screen_height - 100, 3)
 spaceship_group.add(spaceship)
@@ -289,8 +288,8 @@ def toggle_pause(): #hàm này dùng để pause game lại khi ân nút SHIFT v
 def handle_main_menu(): #tạo ra giao diện menu đầu game
     global menu_state, game_paused
     draw_text('UEH', tuban , maucuatuban, 189, 30)
-    draw_text('ROBOT WAR', fontR, org , 40, 140) 
-
+    draw_text('ROBOT WAR', fontR, org , 40, 140)
+    
     if start_button.draw(screen): 
         game_paused = False #khi ấn vào start thì game sẽ bắt đầu chạy
         menu_state = "game" #hiển thị game
@@ -308,11 +307,13 @@ while run:
         screen.blit(mg,(0,0))  # load hình nền menu
         if menu_state == "main": #tạo màn hình menu
             handle_main_menu()
+            if not theme_sound:
+                theme_fx.play()
+                theme_sound = True
 
     else:  # Game is running
         if countdown == 0: #khi game đếm đến 0 thì bắt đầu chơi
             time_now = pygame.time.get_ticks()
-
             if time_now - last_robot_shot > robot_cooldown and len(box_bullet_group) < 5 and len(robot_group) > 0: #kiểm soát lượng hộp mà robot thả xuống là 5 mỗi 1s cho đến khi hết robot
                 attacking_robot = random.choice(robot_group.sprites()) #chọn random robot sẽ thả hộp xuống
                 box_bullet = Box_Bullets(attacking_robot.rect.centerx, attacking_robot.rect.bottom) #thả hộp từ robot cho tới đáy
@@ -333,16 +334,19 @@ while run:
             else: #trường hợp thắng và thua sẽ tạo ra chữ báo hiệu
                 if game_over == -1:
                     draw_text('GAME OVER!', font40, white, int(screen_width / 2 - 170), int(screen_height / 2 + 80))
-                    if not sound_played: 
+                    if not sound_played:
                        lose_fx.play()
                        sound_played = True
-                    draw_text(f'Score: {score}', fontX, white , int(screen_width / 2 - 170), int(screen_height / 2 + 10))	
+                    if score < 30: 
+                       draw_text(f'You only score: {score}', fontW, white , int(screen_width / 2 - 255), int(screen_height / 2 + 10))
+                    else:
+                       draw_text(f'Wow your score is: {score}', fontC, white , int(screen_width / 2 - 263), int(screen_height / 2 + 10))	
                 if game_over == 1:
                     draw_text('YOU WIN!', win, white, int(screen_width / 2 - 200), int(screen_height / 2 + 30))
                     if not sound_played:
                        win_fx.play()
                        sound_played = True
-                    draw_text(f'Score: {score}', fontX, white , int(screen_width / 2 - 200), int(screen_height / 2 - 50))					   
+                    draw_text(f'Excellent! Score: {score}', fontC , white , int(screen_width / 2 - 250), int(screen_height / 2 - 50))					   
                     
         elif countdown > 0: #đồng hồ đếm ngược đầu game
             # Countdown screen logic
