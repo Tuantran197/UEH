@@ -32,9 +32,6 @@ fontC = pygame.font.Font('fonts/pressstart2p.ttf', 25)
 
 
 
-TEXT_COL = (255, 255, 255)
-
-
 #load button images
 start_img = pygame.image.load("images/button_start.png").convert_alpha()
 exit_img = pygame.image.load("images/exit_btn.png").convert_alpha()
@@ -65,8 +62,6 @@ win_fx.set_volume(0.25)
 lose_fx = pygame.mixer.Sound("img/lose.wav")
 lose_fx.set_volume(0.25)
 
-theme_fx = pygame.mixer.Sound("img/theme.wav")
-theme_fx.set_volume(0.25)
 
 
 #define game variables
@@ -82,6 +77,7 @@ menu_state = "main"
 score = 0 
 sound_played = False
 theme_sound = False
+shift_paused = False
 
 #define colours
 red = (255, 0, 0)
@@ -157,8 +153,6 @@ class Spaceship(pygame.sprite.Sprite):
 			game_over = -1
 		return game_over
 
-
-
 #create Bullets class
 class Bullets(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -221,6 +215,7 @@ class Box_Bullets(pygame.sprite.Sprite):
 			explosion = Explosion(self.rect.centerx, self.rect.centery, 1) #nổ theo size 1
 			explosion_group.add(explosion)
 
+
 #create Explosion class
 class Explosion(pygame.sprite.Sprite):
 	def __init__(self, x, y, size):
@@ -277,9 +272,14 @@ def create_robots():
 
 create_robots()
 
+
 #create player
 spaceship = Spaceship(int(screen_width / 2), screen_height - 100, 3)
 spaceship_group.add(spaceship)
+
+def hold_shift():
+	global shift_paused
+	shift_paused = not shift_paused	
 
 def toggle_pause(): #hàm này dùng để pause game lại khi ân nút SHIFT và đồng thời game cũng dừng lại theo
     global game_paused
@@ -296,6 +296,9 @@ def handle_main_menu(): #tạo ra giao diện menu đầu game
     if exit_button.draw(screen):
         pygame.quit() #thoát game khi ấn vào
         exit()
+def handle_shift():
+	global menu_state, shift_paused
+	draw_text('PRESS SHIFT TO RESUME', fontS , white , 38, 328)
 
 # Main game loop
 run = True
@@ -305,11 +308,13 @@ while run:
     # If the game is paused
     if game_paused:
         screen.blit(mg,(0,0))  # load hình nền menu
-        if menu_state == "main": #tạo màn hình menu
-            handle_main_menu()
-            if not theme_sound:
-                theme_fx.play()
-                theme_sound = True
+        handle_main_menu()
+        if not theme_sound:
+            theme_fx.play()
+            theme_sound = True
+	
+    elif shift_paused:
+        handle_shift() 
 
     else:  # Game is running
         if countdown == 0: #khi game đếm đến 0 thì bắt đầu chơi
@@ -335,6 +340,8 @@ while run:
                 if game_over == -1:
                     draw_text('GAME OVER!', font40, white, int(screen_width / 2 - 170), int(screen_height / 2 + 80))
                     if not sound_played:
+                       theme_fx.stop()
+                       theme_sounds= False
                        lose_fx.play()
                        sound_played = True
                     if score < 30: 
@@ -344,6 +351,8 @@ while run:
                 if game_over == 1:
                     draw_text('YOU WIN!', win, white, int(screen_width / 2 - 200), int(screen_height / 2 + 30))
                     if not sound_played:
+                       theme_fx.stop()
+                       theme_sound = False
                        win_fx.play()
                        sound_played = True
                     draw_text(f'Excellent! Score: {score}', fontC , white , int(screen_width / 2 - 250), int(screen_height / 2 - 50))					   
@@ -371,6 +380,6 @@ while run:
             run = False  # Exit the game loop
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LSHIFT:
-                toggle_pause()
+                hold_shift()
     pygame.display.update()  # Update the screen
 pygame.quit()
